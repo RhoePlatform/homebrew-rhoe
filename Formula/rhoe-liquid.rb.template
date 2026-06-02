@@ -56,7 +56,7 @@ __BOTTLE_BLOCK__
       source = system_library_path(library_name)
       odie "Unable to locate #{library_name} for the Linux bottle runtime" if source.nil?
 
-      destination.install source => library_name
+      cp source.realpath, destination/library_name
       vendored_libraries[library_name] = true
 
       Utils.safe_popen_read("ldd", source).each_line do |line|
