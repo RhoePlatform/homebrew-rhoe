@@ -144,6 +144,7 @@ jobs:
           mkdir -p "$tap_repo/Formula"
           cp Formula/rhoe-liquid.rb "$tap_repo/Formula/rhoe-liquid.rb"
           if brew help trust >/dev/null 2>&1; then
+            brew trust rhoeplatform/rhoe
             brew trust --formula rhoeplatform/rhoe/rhoe-liquid
           fi
           git -C "$tap_repo" status --short
