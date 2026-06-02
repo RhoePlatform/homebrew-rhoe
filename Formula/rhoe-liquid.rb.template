@@ -30,9 +30,12 @@ __BOTTLE_BLOCK__
                 "FileHandle.standardError.write(Data(line.utf8))"
       resource("swift-6.3.2-ubuntu24.04").stage do
         swift = Pathname.pwd/"usr/bin/swift"
+        swift_runtime = Pathname.pwd/"usr/lib/swift/linux"
         cd buildpath do
-          system swift, "build", "-c", "release", "--product", "liquid", "--disable-sandbox"
+          system swift, "build", "-c", "release", "--product", "liquid", "--disable-sandbox",
+                        "-Xlinker", "-rpath", "-Xlinker", "$ORIGIN/../libexec/swift/linux"
         end
+        (libexec/"swift/linux").install Dir["#{swift_runtime}/*.so"]
       end
     else
       system swift, "build", "-c", "release", "--product", "liquid", "--disable-sandbox"
