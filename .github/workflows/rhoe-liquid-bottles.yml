@@ -135,6 +135,9 @@ jobs:
         run: |
           set -euo pipefail
           brew test-bot --only-cleanup-before
+          if brew help trust >/dev/null 2>&1 && brew --repo RhoePlatform/rhoe >/dev/null 2>&1; then
+            brew trust rhoeplatform/rhoe
+          fi
           brew test-bot --only-setup
 
           if ! tap_repo="$(brew --repo RhoePlatform/rhoe 2>/dev/null)"; then
