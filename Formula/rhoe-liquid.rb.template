@@ -11,6 +11,7 @@ __BOTTLE_BLOCK__
   end
 
   on_linux do
+    depends_on "patchelf" => :build
     depends_on "swift" => :build
   end
 
@@ -32,15 +33,32 @@ __BOTTLE_BLOCK__
         swift = Pathname.pwd/"usr/bin/swift"
         swift_runtime = Pathname.pwd/"usr/lib/swift/linux"
         cd buildpath do
-          system swift, "build", "-c", "release", "--product", "liquid", "--disable-sandbox",
-                        "-Xlinker", "-rpath", "-Xlinker", "$ORIGIN/../libexec/swift/linux"
+          system swift, "build", "-c", "release", "--product", "liquid", "--disable-sandbox"
         end
-        (libexec/"swift/linux").install Dir["#{swift_runtime}/*.so"]
+        %w[
+          libBlocksRuntime.so
+          libFoundation.so
+          libFoundationEssentials.so
+          libFoundationInternationalization.so
+          lib_FoundationICU.so
+          libdispatch.so
+          libswift_Builtin_float.so
+          libswift_Concurrency.so
+          libswift_RegexParser.so
+          libswift_StringProcessing.so
+          libswiftCore.so
+          libswiftDispatch.so
+          libswiftGlibc.so
+          libswiftSynchronization.so
+        ].each do |library|
+          (libexec/"swift/linux").install swift_runtime/library
+        end
       end
     else
       system swift, "build", "-c", "release", "--product", "liquid", "--disable-sandbox"
     end
 
+    system "patchelf", "--set-rpath", "$ORIGIN/../libexec/swift/linux", buildpath/".build/release/liquid" if OS.linux?
     bin.install buildpath/".build/release/liquid"
 
     manpage = buildpath/"Documentation/CLI/man/liquid.1"
