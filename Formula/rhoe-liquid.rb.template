@@ -13,6 +13,9 @@ __BOTTLE_BLOCK__
   on_linux do
     depends_on "patchelf" => :build
     depends_on "swift" => :build
+    depends_on "curl"
+    depends_on "libxml2"
+    depends_on "zlib-ng-compat"
   end
 
   resource "swift-6.3.2-ubuntu24.04" do
@@ -40,6 +43,8 @@ __BOTTLE_BLOCK__
           libFoundation.so
           libFoundationEssentials.so
           libFoundationInternationalization.so
+          libFoundationNetworking.so
+          libFoundationXML.so
           lib_FoundationICU.so
           libdispatch.so
           libswift_Builtin_float.so
@@ -58,7 +63,17 @@ __BOTTLE_BLOCK__
       system swift, "build", "-c", "release", "--product", "liquid", "--disable-sandbox"
     end
 
-    system "patchelf", "--set-rpath", "$ORIGIN/../libexec/swift/linux", buildpath/".build/release/liquid" if OS.linux?
+    if OS.linux?
+      swift_runtime_rpath = [
+        "$ORIGIN",
+        Formula["curl"].opt_lib,
+        Formula["libxml2"].opt_lib,
+        Formula["zlib-ng-compat"].opt_lib,
+      ].join(":")
+      system "patchelf", "--set-rpath", swift_runtime_rpath, libexec/"swift/linux/libFoundationNetworking.so"
+      system "patchelf", "--set-rpath", swift_runtime_rpath, libexec/"swift/linux/libFoundationXML.so"
+      system "patchelf", "--set-rpath", "$ORIGIN/../libexec/swift/linux", buildpath/".build/release/liquid"
+    end
     bin.install buildpath/".build/release/liquid"
 
     manpage = buildpath/"Documentation/CLI/man/liquid.1"
