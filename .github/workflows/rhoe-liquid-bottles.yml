@@ -118,15 +118,16 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y build-essential bubblewrap curl file git
           if ! command -v brew >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y build-essential curl file git
             NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           fi
 
           echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
           echo "/home/linuxbrew/.linuxbrew/sbin" >> "$GITHUB_PATH"
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          bwrap --version
           brew --version
 
       - name: Build bottle
