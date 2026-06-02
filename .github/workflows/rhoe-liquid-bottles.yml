@@ -1,0 +1,215 @@
+name: RhoeLiquid Bottles
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "RhoeLiquid version without leading v"
+        required: true
+        type: string
+      source_sha256:
+        description: "SHA-256 of the RhoeLiquid vX.Y.Z source archive"
+        required: true
+        type: string
+      publish_release:
+        description: "Upload bottle artifacts to the tap GitHub release"
+        required: true
+        default: false
+        type: boolean
+      commit_formula:
+        description: "Commit Formula/rhoe-liquid.rb with final bottle checksums"
+        required: true
+        default: false
+        type: boolean
+  repository_dispatch:
+    types:
+      - rhoe-liquid-release
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-formula:
+    name: Render source formula
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      source_sha256: ${{ steps.release.outputs.source_sha256 }}
+      publish_release: ${{ steps.release.outputs.publish_release }}
+      commit_formula: ${{ steps.release.outputs.commit_formula }}
+    steps:
+      - name: Checkout tap
+        uses: actions/checkout@v4
+
+      - name: Resolve release inputs
+        id: release
+        env:
+          DISPATCH_VERSION: ${{ github.event.client_payload.version }}
+          DISPATCH_SOURCE_SHA256: ${{ github.event.client_payload.source_sha256 }}
+          DISPATCH_PUBLISH_RELEASE: ${{ github.event.client_payload.publish_release }}
+          DISPATCH_COMMIT_FORMULA: ${{ github.event.client_payload.commit_formula }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_SOURCE_SHA256: ${{ inputs.source_sha256 }}
+          INPUT_PUBLISH_RELEASE: ${{ inputs.publish_release }}
+          INPUT_COMMIT_FORMULA: ${{ inputs.commit_formula }}
+        run: |
+          set -euo pipefail
+          version="${INPUT_VERSION:-${DISPATCH_VERSION:-}}"
+          source_sha256="${INPUT_SOURCE_SHA256:-${DISPATCH_SOURCE_SHA256:-}}"
+          publish_release="${INPUT_PUBLISH_RELEASE:-${DISPATCH_PUBLISH_RELEASE:-false}}"
+          commit_formula="${INPUT_COMMIT_FORMULA:-${DISPATCH_COMMIT_FORMULA:-false}}"
+
+          test -n "$version"
+          test -n "$source_sha256"
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "source_sha256=$source_sha256" >> "$GITHUB_OUTPUT"
+          echo "publish_release=$publish_release" >> "$GITHUB_OUTPUT"
+          echo "commit_formula=$commit_formula" >> "$GITHUB_OUTPUT"
+
+      - name: Render source-only formula
+        env:
+          RHOE_LIQUID_VERSION: ${{ steps.release.outputs.version }}
+          RHOE_LIQUID_SOURCE_SHA256: ${{ steps.release.outputs.source_sha256 }}
+        run: bash Scripts/CI/render-rhoe-liquid-formula.sh
+
+      - name: Validate tap
+        run: bash Scripts/CI/validate-tap.sh
+
+      - name: Upload source formula
+        uses: actions/upload-artifact@v4
+        with:
+          name: rhoe-liquid-source-formula
+          path: Formula/rhoe-liquid.rb
+
+  bottle:
+    name: Bottle on ${{ matrix.os }}
+    needs: prepare-formula
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-26
+          - ubuntu-24.04
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout tap
+        uses: actions/checkout@v4
+
+      - name: Download rendered source formula
+        uses: actions/download-artifact@v4
+        with:
+          name: rhoe-liquid-source-formula
+          path: Formula
+
+      - name: Normalize downloaded formula path
+        run: |
+          set -euo pipefail
+          if [[ -f Formula/Formula/rhoe-liquid.rb ]]; then
+            mv Formula/Formula/rhoe-liquid.rb Formula/rhoe-liquid.rb
+            rmdir Formula/Formula
+          fi
+          test -f Formula/rhoe-liquid.rb
+
+      - name: Validate tap
+        run: bash Scripts/CI/validate-tap.sh
+
+      - name: Build bottle
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+        run: |
+          brew test-bot --only-cleanup-before
+          brew test-bot --only-setup
+          brew test-bot --only-formulae --root-url="https://github.com/RhoePlatform/homebrew-rhoe/releases/download/rhoe-liquid-${{ needs.prepare-formula.outputs.version }}" rhoe-liquid
+
+      - name: Upload bottle artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rhoe-liquid-bottle-${{ matrix.os }}
+          path: |
+            *.bottle*.tar.gz
+            *.bottle*.json
+
+  publish:
+    name: Publish bottles and formula
+    needs:
+      - prepare-formula
+      - bottle
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout tap
+        uses: actions/checkout@v4
+
+      - name: Download source formula
+        uses: actions/download-artifact@v4
+        with:
+          name: rhoe-liquid-source-formula
+          path: Formula
+
+      - name: Normalize downloaded formula path
+        run: |
+          set -euo pipefail
+          if [[ -f Formula/Formula/rhoe-liquid.rb ]]; then
+            mv Formula/Formula/rhoe-liquid.rb Formula/rhoe-liquid.rb
+            rmdir Formula/Formula
+          fi
+          test -f Formula/rhoe-liquid.rb
+
+      - name: Download bottle artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: bottle-artifacts
+
+      - name: Publish bottle assets
+        if: needs.prepare-formula.outputs.publish_release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="rhoe-liquid-${{ needs.prepare-formula.outputs.version }}"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" \
+              --title "rhoe-liquid ${{ needs.prepare-formula.outputs.version }} bottles" \
+              --notes "Bottle artifacts for RhoeLiquid ${{ needs.prepare-formula.outputs.version }}."
+          fi
+          mapfile -t assets < <(find bottle-artifacts -type f \( -name '*.tar.gz' -o -name '*.json' \) | sort)
+          if [[ "${#assets[@]}" -eq 0 ]]; then
+            echo "error: no bottle assets found" >&2
+            exit 1
+          fi
+          gh release upload "$tag" "${assets[@]}" --clobber
+
+      - name: Extract bottle checksums
+        id: bottles
+        run: bash Scripts/CI/extract-rhoe-liquid-bottle-checksums.sh bottle-artifacts
+
+      - name: Render final formula with bottle block
+        env:
+          RHOE_LIQUID_VERSION: ${{ needs.prepare-formula.outputs.version }}
+          RHOE_LIQUID_SOURCE_SHA256: ${{ needs.prepare-formula.outputs.source_sha256 }}
+          RHOE_LIQUID_BOTTLE_SHA256_ARM64_TAHOE: ${{ steps.bottles.outputs.arm64_tahoe_sha256 }}
+          RHOE_LIQUID_BOTTLE_SHA256_X86_64_LINUX: ${{ steps.bottles.outputs.x86_64_linux_sha256 }}
+        run: bash Scripts/CI/render-rhoe-liquid-formula.sh
+
+      - name: Validate final tap
+        run: bash Scripts/CI/validate-tap.sh
+
+      - name: Upload final formula
+        uses: actions/upload-artifact@v4
+        with:
+          name: rhoe-liquid-final-formula
+          path: Formula/rhoe-liquid.rb
+
+      - name: Commit final formula
+        if: needs.prepare-formula.outputs.commit_formula == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "rhoeplatform-release-bot"
+          git config user.email "release-bot@users.noreply.github.com"
+          git add Formula/rhoe-liquid.rb
+          if git diff --cached --quiet; then
+            echo "Formula already up to date."
+          else
+            git commit -m "rhoe-liquid ${{ needs.prepare-formula.outputs.version }}"
+            git push
+          fi

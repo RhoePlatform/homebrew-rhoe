@@ -1,0 +1,4 @@
+.DS_Store
+*.bottle*.tar.gz
+*.bottle*.json
+*.log
