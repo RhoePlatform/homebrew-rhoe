@@ -40,9 +40,7 @@ grep -Fq 'sha256 cellar: :any_skip_relocation, arm64_tahoe:' "$tmp_dir/rhoe-liqu
 grep -Fq 'sha256 cellar: :any_skip_relocation, x86_64_linux:' "$tmp_dir/rhoe-liquid.rb" || fail "Rendered formula must include Linux x86-64 bottle checksum"
 
 if [[ "${RHOE_TAP_BREW_STYLE:-0}" == "1" ]] && command -v brew >/dev/null 2>&1; then
-  HOMEBREW_NO_AUTO_UPDATE=1 brew style --formula "$tmp_dir/rhoe-liquid.rb" >/dev/null || {
-    echo "warning: brew style failed for generated fixture formula; ruby syntax validation still passed" >&2
-  }
+  HOMEBREW_NO_AUTO_UPDATE=1 brew style --formula "$tmp_dir/rhoe-liquid.rb" >/dev/null
 fi
 
 echo "Homebrew tap validation passed."

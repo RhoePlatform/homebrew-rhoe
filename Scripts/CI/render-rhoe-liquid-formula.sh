@@ -47,7 +47,10 @@ template_path, output_path, version, source_sha256, bottle_block = sys.argv[1:]
 text = Path(template_path).read_text(encoding="utf-8")
 text = text.replace("__VERSION__", version)
 text = text.replace("__SOURCE_SHA256__", source_sha256)
-text = text.replace("__BOTTLE_BLOCK__", bottle_block.rstrip())
+bottle_block = bottle_block.rstrip()
+if bottle_block:
+    bottle_block = f"\n{bottle_block}\n"
+text = text.replace("__BOTTLE_BLOCK__", bottle_block)
 Path(output_path).write_text(text, encoding="utf-8")
 PY
 
