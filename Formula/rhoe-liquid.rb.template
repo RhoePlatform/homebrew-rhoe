@@ -70,6 +70,7 @@ __BOTTLE_BLOCK__
         Formula["libxml2"].opt_lib,
         Formula["zlib-ng-compat"].opt_lib,
       ].join(":")
+      libxml2_library = Formula["libxml2"].opt_lib/"libxml2.so.2"
       liquid_rpath = [
         "$ORIGIN/../libexec/swift/linux",
         Formula["curl"].opt_lib,
@@ -80,6 +81,10 @@ __BOTTLE_BLOCK__
         next if library.extname != ".so"
 
         system "patchelf", "--force-rpath", "--set-rpath", swift_runtime_rpath, library
+        needed_libraries = Utils.safe_popen_read("patchelf", "--print-needed", library).lines(chomp: true)
+        next unless needed_libraries.include?("libxml2.so.2")
+
+        system "patchelf", "--replace-needed", "libxml2.so.2", libxml2_library.to_s, library
       end
       system "patchelf", "--force-rpath", "--set-rpath", liquid_rpath, buildpath/".build/release/liquid"
     end
