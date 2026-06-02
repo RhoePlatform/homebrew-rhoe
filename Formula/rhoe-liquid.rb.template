@@ -14,23 +14,39 @@ __BOTTLE_BLOCK__
     depends_on "swift" => :build
   end
 
+  resource "swift-6.3.2-ubuntu24.04" do
+    url "https://download.swift.org/swift-6.3.2-release/ubuntu2404/swift-6.3.2-RELEASE/swift-6.3.2-RELEASE-ubuntu24.04.tar.gz"
+    sha256 "827b2e935b52425068729d277148f286b37886231299d71f9136bcffd7084339"
+  end
+
   def install
     swift = ENV["HOMEBREW_RHOE_LIQUID_SWIFT"]
     swift = "swift" if swift.blank?
-    system swift, "build", "-c", "release", "--product", "liquid", "--disable-sandbox"
-    bin.install ".build/release/liquid"
 
-    manpage = "Documentation/CLI/man/liquid.1"
-    man1.install manpage if File.exist?(manpage)
+    if OS.linux?
+      resource("swift-6.3.2-ubuntu24.04").stage do
+        swift = Pathname.pwd/"swift-6.3.2-RELEASE-ubuntu24.04/usr/bin/swift"
+        cd buildpath do
+          system swift, "build", "-c", "release", "--product", "liquid", "--disable-sandbox"
+        end
+      end
+    else
+      system swift, "build", "-c", "release", "--product", "liquid", "--disable-sandbox"
+    end
 
-    bash_completion_path = "Documentation/CLI/completions/liquid.bash"
-    bash_completion.install bash_completion_path => "liquid" if File.exist?(bash_completion_path)
+    bin.install buildpath/".build/release/liquid"
 
-    zsh_completion_path = "Documentation/CLI/completions/liquid.zsh"
-    zsh_completion.install zsh_completion_path => "_liquid" if File.exist?(zsh_completion_path)
+    manpage = buildpath/"Documentation/CLI/man/liquid.1"
+    man1.install manpage if manpage.exist?
 
-    fish_completion_path = "Documentation/CLI/completions/liquid.fish"
-    fish_completion.install fish_completion_path if File.exist?(fish_completion_path)
+    bash_completion_path = buildpath/"Documentation/CLI/completions/liquid.bash"
+    bash_completion.install bash_completion_path => "liquid" if bash_completion_path.exist?
+
+    zsh_completion_path = buildpath/"Documentation/CLI/completions/liquid.zsh"
+    zsh_completion.install zsh_completion_path => "_liquid" if zsh_completion_path.exist?
+
+    fish_completion_path = buildpath/"Documentation/CLI/completions/liquid.fish"
+    fish_completion.install fish_completion_path if fish_completion_path.exist?
   end
 
   test do
