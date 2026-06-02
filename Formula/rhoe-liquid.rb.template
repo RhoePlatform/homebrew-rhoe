@@ -76,10 +76,11 @@ __BOTTLE_BLOCK__
         Formula["libxml2"].opt_lib,
         Formula["zlib-ng-compat"].opt_lib,
       ].join(":")
-      system "patchelf", "--force-rpath", "--set-rpath", swift_runtime_rpath,
-             libexec/"swift/linux/libFoundationNetworking.so"
-      system "patchelf", "--force-rpath", "--set-rpath", swift_runtime_rpath,
-             libexec/"swift/linux/libFoundationXML.so"
+      (libexec/"swift/linux").children.each do |library|
+        next if library.extname != ".so"
+
+        system "patchelf", "--force-rpath", "--set-rpath", swift_runtime_rpath, library
+      end
       system "patchelf", "--force-rpath", "--set-rpath", liquid_rpath, buildpath/".build/release/liquid"
     end
     bin.install buildpath/".build/release/liquid"
