@@ -24,6 +24,7 @@ __BOTTLE_BLOCK__
     swift = "swift" if swift.blank?
 
     if OS.linux?
+      ENV.clang
       resource("swift-6.3.2-ubuntu24.04").stage do
         swift = Pathname.pwd/"usr/bin/swift"
         cd buildpath do
