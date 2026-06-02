@@ -129,6 +129,29 @@ jobs:
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           brew --version
 
+      - name: Set up Swift 6.3 on Linux
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          swift_version="6.3.2"
+          swift_release="swift-${swift_version}-RELEASE"
+          swift_platform="ubuntu24.04"
+          toolchain_root="/home/linuxbrew/.linuxbrew/opt/${swift_release}-${swift_platform}"
+          toolchain_url="https://download.swift.org/swift-${swift_version}-release/ubuntu2404/${swift_release}/${swift_release}-${swift_platform}.tar.gz"
+
+          if [[ ! -x "$toolchain_root/usr/bin/swift" ]]; then
+            tmp_dir="$(mktemp -d)"
+            trap 'rm -rf "$tmp_dir"' EXIT
+            curl -fsSL "$toolchain_url" -o "$tmp_dir/swift.tar.gz"
+            tar -xzf "$tmp_dir/swift.tar.gz" -C "$tmp_dir"
+            rm -rf "$toolchain_root"
+            mkdir -p "$(dirname "$toolchain_root")"
+            mv "$tmp_dir/${swift_release}-${swift_platform}" "$toolchain_root"
+          fi
+
+          echo "HOMEBREW_RHOE_LIQUID_SWIFT=$toolchain_root/usr/bin/swift" >> "$GITHUB_ENV"
+          "$toolchain_root/usr/bin/swift" --version
+
       - name: Build bottle
         env:
           HOMEBREW_NO_AUTO_UPDATE: "1"

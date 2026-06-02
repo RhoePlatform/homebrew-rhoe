@@ -17,7 +17,9 @@ __BOTTLE_BLOCK__
   end
 
   def install
-    system "swift", "build", "-c", "release", "--product", "liquid", "--disable-sandbox"
+    swift = ENV["HOMEBREW_RHOE_LIQUID_SWIFT"]
+    swift = "swift" if swift.nil? || swift.empty?
+    system swift, "build", "-c", "release", "--product", "liquid", "--disable-sandbox"
     bin.install ".build/release/liquid"
 
     if File.exist?("Documentation/CLI/man/liquid.1")
