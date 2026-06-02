@@ -114,13 +114,42 @@ jobs:
       - name: Validate tap
         run: bash Scripts/CI/validate-tap.sh
 
+      - name: Set up Homebrew on Linux
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          if ! command -v brew >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y build-essential curl file git
+            NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          fi
+
+          echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
+          echo "/home/linuxbrew/.linuxbrew/sbin" >> "$GITHUB_PATH"
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew --version
+
       - name: Build bottle
         env:
           HOMEBREW_NO_AUTO_UPDATE: "1"
         run: |
+          set -euo pipefail
           brew test-bot --only-cleanup-before
           brew test-bot --only-setup
-          brew test-bot --only-formulae --root-url="https://github.com/RhoePlatform/homebrew-rhoe/releases/download/rhoe-liquid-${{ needs.prepare-formula.outputs.version }}" rhoe-liquid
+
+          if ! tap_repo="$(brew --repo RhoePlatform/rhoe 2>/dev/null)"; then
+            brew tap RhoePlatform/rhoe
+            tap_repo="$(brew --repo RhoePlatform/rhoe)"
+          fi
+          mkdir -p "$tap_repo/Formula"
+          cp Formula/rhoe-liquid.rb "$tap_repo/Formula/rhoe-liquid.rb"
+          git -C "$tap_repo" status --short
+
+          brew test-bot \
+            --only-formulae \
+            --tap="RhoePlatform/rhoe" \
+            --testing-formulae="rhoe-liquid" \
+            --root-url="https://github.com/RhoePlatform/homebrew-rhoe/releases/download/rhoe-liquid-${{ needs.prepare-formula.outputs.version }}"
 
       - name: Upload bottle artifacts
         uses: actions/upload-artifact@v4
