@@ -25,7 +25,7 @@ __BOTTLE_BLOCK__
 
     if OS.linux?
       resource("swift-6.3.2-ubuntu24.04").stage do
-        swift = Pathname.pwd/"swift-6.3.2-RELEASE-ubuntu24.04/usr/bin/swift"
+        swift = Pathname.pwd/"usr/bin/swift"
         cd buildpath do
           system swift, "build", "-c", "release", "--product", "liquid", "--disable-sandbox"
         end
