@@ -84,9 +84,6 @@ class RhoeLiquid < Formula
 
     if OS.linux?
       ENV.clang
-      inreplace "Sources/RhoeLiquid/RhoeLiquid.swift",
-                "fputs(line, stderr)",
-                "FileHandle.standardError.write(Data(line.utf8))"
       resource("swift-6.3.2-ubuntu24.04").stage do
         swift = Pathname.pwd/"usr/bin/swift"
         swift_runtime = Pathname.pwd/"usr/lib/swift/linux"
