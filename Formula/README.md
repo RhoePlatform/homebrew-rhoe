@@ -1,9 +1,13 @@
 # Formula Directory
 
-This directory intentionally starts with templates, not a live installable
-formula.
+This directory keeps one template per RhoePlatform CLI formula.
 
-`Formula/rhoe-liquid.rb` is generated after the first public `RhoeLiquid` tag
-exists and the source archive plus bottle checksums are available. Keeping the
-pre-release tap template-driven avoids publishing a formula with placeholder
-checksums or a URL that cannot yet be installed.
+Generated formula files are committed only after the matching source tag,
+source archive checksum, and bottle checksums are available. Keeping the tap
+template-driven avoids publishing formulas with placeholder checksums or URLs
+that cannot yet be installed.
+
+| Formula | Executable | Template |
+| --- | --- | --- |
+| `rhoe-liquid` | `liquid` | `Formula/rhoe-liquid.rb.template` |
+| `rhoe-markdown` | `rhoemd` | `Formula/rhoe-markdown.rb.template` |

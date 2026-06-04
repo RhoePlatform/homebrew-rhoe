@@ -4,19 +4,15 @@ Official Homebrew tap for RhoePlatform command-line tools.
 
 This repository is the distribution lane for installable Rhoe CLIs. It starts
 with `rhoe-liquid`, the Homebrew formula for the RhoeLiquid `liquid` executable,
-and is designed to grow into the shared tap for RhoeMarkdown, RhoeJSON,
-RhoeCharts, and future foundation engines.
+and `rhoe-markdown`, the Homebrew formula for the RhoeMarkdown `rhoemd`
+compiler. The same pattern will extend to RhoeJSON, RhoeCharts, and future
+foundation engines.
 
 ## Status
 
-This tap is staged ahead of the first public `RhoeLiquid` release. The
-installable `Formula/rhoe-liquid.rb` file is generated only after the
-`RhoePlatform/RhoeLiquid` source repository has a reviewed `v0.1.0` tag,
-source archive checksum, and bottle artifacts.
-
-Until that release exists, this repository contains the tap infrastructure:
-formula templates, bottle workflow scaffolding, validation scripts, and release
-documentation.
+This tap is source-formula plus bottle driven. Each installable formula is
+rendered from a checked-in template after the matching source repository has a
+reviewed `vX.Y.Z` tag, source archive checksum, and bottle artifacts.
 
 ## Install
 
@@ -28,13 +24,27 @@ brew install rhoe-liquid
 liquid --version
 ```
 
-The formula name is `rhoe-liquid`; the installed executable is `liquid`.
+Install the Markdown compiler:
+
+```bash
+brew tap RhoePlatform/rhoe
+brew install rhoe-markdown
+rhoemd --version
+```
+
+The formula names are intentionally product-oriented:
+
+| Formula | Executable |
+| --- | --- |
+| `rhoe-liquid` | `liquid` |
+| `rhoe-markdown` | `rhoemd` |
 
 ## Formulae
 
 | Formula | Executable | Status | Source repo |
 | --- | --- | --- | --- |
-| `rhoe-liquid` | `liquid` | `v0.1.0` staging | `RhoePlatform/RhoeLiquid` |
+| `rhoe-liquid` | `liquid` | `v0.1.x` release lane | `RhoePlatform/RhoeLiquid` |
+| `rhoe-markdown` | `rhoemd` | `v0.1.0` release lane | `RhoePlatform/RhoeMarkdown` |
 
 ## Bottle Targets
 
@@ -67,23 +77,34 @@ RHOE_LIQUID_BOTTLE_SHA256_X86_64_LINUX=<linux-x86_64-bottle-sha256> \
 make render-rhoe-liquid-formula
 ```
 
-The rendered formula is written to `Formula/rhoe-liquid.rb`.
+Render the RhoeMarkdown formula:
 
-For the integrated release lane, dispatch the `RhoeLiquid Bottles` workflow with
-the source tag version and source archive checksum. It renders the source
-formula, builds bottles for `arm64_tahoe` and `x86_64_linux`, publishes bottle
-assets when requested, computes bottle checksums, and commits the final formula
-when `commit_formula=true`.
+```bash
+RHOE_MARKDOWN_VERSION=0.1.0 \
+RHOE_MARKDOWN_SOURCE_SHA256=<source-archive-sha256> \
+RHOE_MARKDOWN_BOTTLE_SHA256_ARM64_TAHOE=<macos-26-arm64-bottle-sha256> \
+RHOE_MARKDOWN_BOTTLE_SHA256_X86_64_LINUX=<linux-x86_64-bottle-sha256> \
+make render-rhoe-markdown-formula
+```
+
+Rendered formulas are written to `Formula/<formula>.rb`.
+
+For the integrated release lanes, dispatch the `RhoeLiquid Bottles` or
+`RhoeMarkdown Bottles` workflow with the source tag version and source archive
+checksum. The workflow renders the source formula, builds bottles for
+`arm64_tahoe` and `x86_64_linux`, publishes bottle assets when requested,
+computes bottle checksums, and commits the final formula when
+`commit_formula=true`.
 
 ## Release Model
 
-1. Certify and tag `RhoePlatform/RhoeLiquid`.
+1. Certify and tag the source repository.
 2. Compute the `vX.Y.Z` source archive checksum.
-3. Render `Formula/rhoe-liquid.rb` from `Formula/rhoe-liquid.rb.template`.
+3. Render the formula from its `Formula/*.rb.template`.
 4. Build bottles on `macos-26` and `ubuntu-24.04`.
 5. Publish bottles to this tap's GitHub Releases.
 6. Commit the final formula with the source checksum and bottle block.
-7. Run `brew tap RhoePlatform/rhoe && brew install rhoe-liquid` as the final
+7. Run `brew tap RhoePlatform/rhoe && brew install <formula>` as the final
    public smoke test.
 
 ## Naming

@@ -1,0 +1,63 @@
+name: Publish RhoeMarkdown Formula
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "RhoeMarkdown version without leading v"
+        required: true
+        type: string
+      source_sha256:
+        description: "SHA-256 of the RhoeMarkdown vX.Y.Z source archive"
+        required: true
+        type: string
+      bottle_sha256_arm64_tahoe:
+        description: "Bottle SHA-256 for macOS 26 Apple Silicon"
+        required: true
+        type: string
+      bottle_sha256_x86_64_linux:
+        description: "Bottle SHA-256 for Linux x86-64"
+        required: true
+        type: string
+      commit_formula:
+        description: "Commit the rendered Formula/rhoe-markdown.rb to main"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    name: Render and validate formula
+    runs-on: macos-26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Render formula
+        env:
+          RHOE_MARKDOWN_VERSION: ${{ inputs.version }}
+          RHOE_MARKDOWN_SOURCE_SHA256: ${{ inputs.source_sha256 }}
+          RHOE_MARKDOWN_BOTTLE_SHA256_ARM64_TAHOE: ${{ inputs.bottle_sha256_arm64_tahoe }}
+          RHOE_MARKDOWN_BOTTLE_SHA256_X86_64_LINUX: ${{ inputs.bottle_sha256_x86_64_linux }}
+        run: bash Scripts/CI/render-rhoe-markdown-formula.sh
+
+      - name: Validate tap
+        run: bash Scripts/CI/validate-tap.sh
+
+      - name: Upload rendered formula
+        uses: actions/upload-artifact@v4
+        with:
+          name: rhoe-markdown-formula
+          path: Formula/rhoe-markdown.rb
+
+      - name: Commit rendered formula
+        if: inputs.commit_formula
+        run: |
+          git config user.name "rhoeplatform-release-bot"
+          git config user.email "release-bot@users.noreply.github.com"
+          git add Formula/rhoe-markdown.rb
+          git commit -m "rhoe-markdown ${{ inputs.version }}"
+          git push

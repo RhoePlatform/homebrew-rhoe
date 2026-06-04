@@ -1,4 +1,4 @@
-.PHONY: check render-rhoe-liquid-formula clean
+.PHONY: check render-rhoe-liquid-formula render-rhoe-markdown-formula clean
 
 check:
 	bash Scripts/CI/validate-tap.sh
@@ -6,5 +6,8 @@ check:
 render-rhoe-liquid-formula:
 	bash Scripts/CI/render-rhoe-liquid-formula.sh
 
+render-rhoe-markdown-formula:
+	bash Scripts/CI/render-rhoe-markdown-formula.sh
+
 clean:
-	rm -f Formula/rhoe-liquid.rb
+	rm -f Formula/rhoe-liquid.rb Formula/rhoe-markdown.rb
