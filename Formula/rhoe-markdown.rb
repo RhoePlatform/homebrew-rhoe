@@ -1,15 +1,15 @@
 class RhoeMarkdown < Formula
   desc "Semantic Markdown compiler and projection engine CLI"
   homepage "https://github.com/RhoePlatform/RhoeMarkdown"
-  url "https://github.com/RhoePlatform/RhoeMarkdown/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "531bd6ae16c50b45d2446fd340e803701358019da6366a090bf06cbdfd12f74f"
+  url "https://github.com/RhoePlatform/RhoeMarkdown/archive/refs/tags/v0.1.1.tar.gz"
+  sha256 "f1145fb44c5bdb0ead4d3ad1f74bb820b98ebb239396d52fe463f447b15c0bdb"
   license "Apache-2.0"
   head "https://github.com/RhoePlatform/RhoeMarkdown.git", branch: "main"
 
   bottle do
-    root_url "https://github.com/RhoePlatform/homebrew-rhoe/releases/download/rhoe-markdown-0.1.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "7596e6756773bcfdeb25e6a16fc70c4d5bd322110c631ab8c51b5dc65f81758e"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "4811e2e18c20104299bc838865ebb3579d6e65f04e7d05f39973dbdcfc101637"
+    root_url "https://github.com/RhoePlatform/homebrew-rhoe/releases/download/rhoe-markdown-0.1.1"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "fa80e16f17d4ba6d069dcb500339bcc21f1a897ee4c1bc2f10eec48ee4017a42"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "4e818d56bc2ddcd854216db61d834a2656661288a831115f7375eb9bc2846c66"
   end
 
   on_macos do
