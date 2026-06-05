@@ -108,6 +108,7 @@ __BOTTLE_BLOCK__
       vendor_linux_library_closure("libxml2.so.2", libexec/"swift/linux")
     else
       system swift, "build", "-c", "release", "--product", "rhoemd", "--disable-sandbox"
+      system swift, "build", "-c", "release", "--product", "rhoemd-preview-menu", "--disable-sandbox"
     end
 
     if OS.linux?
@@ -130,6 +131,7 @@ __BOTTLE_BLOCK__
     end
     bin.install buildpath/".build/release/rhoemd"
     bin.install_symlink bin/"rhoemd" => "markdown"
+    bin.install buildpath/".build/release/rhoemd-preview-menu" if OS.mac?
   end
 
   test do
@@ -142,5 +144,10 @@ __BOTTLE_BLOCK__
 
     system bin/"markdown", "input.md", "--format", "html", "--output", "alias.html"
     assert_match "<strong>rhoemd</strong>", (testpath/"alias.html").read
+
+    if OS.mac?
+      assert_predicate bin/"rhoemd-preview-menu", :exist?
+      assert_match '"state"', shell_output("#{bin}/rhoemd-preview-menu --status-json")
+    end
   end
 end

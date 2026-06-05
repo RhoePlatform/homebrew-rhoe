@@ -28,6 +28,7 @@ grep -Fq "class RhoeMarkdown < Formula" Formula/rhoe-markdown.rb.template || fai
 grep -Fq 'bin.install_symlink bin/"liquid" => "rhoelq"' Formula/rhoe-liquid.rb.template || fail "RhoeLiquid formula template must install rhoelq alias"
 grep -Fq "rhoemd" Formula/rhoe-markdown.rb.template || fail "RhoeMarkdown formula template must install rhoemd"
 grep -Fq 'bin.install_symlink bin/"rhoemd" => "markdown"' Formula/rhoe-markdown.rb.template || fail "RhoeMarkdown formula template must install markdown alias"
+grep -Fq 'rhoemd-preview-menu' Formula/rhoe-markdown.rb.template || fail "RhoeMarkdown formula template must install the macOS preview menu companion"
 grep -Fq "arm64_tahoe" README.md || fail "README must document the macOS 26 Apple Silicon bottle target"
 grep -Fq "x86_64_linux" README.md || fail "README must document the Linux x86-64 bottle target"
 
@@ -61,6 +62,7 @@ grep -Fq 'root_url "https://github.com/RhoePlatform/homebrew-rhoe/releases/downl
 grep -Fq 'sha256 cellar: :any_skip_relocation, arm64_tahoe:' "$tmp_dir/rhoe-markdown.rb" || fail "Rendered RhoeMarkdown formula must include macOS 26 Apple Silicon bottle checksum"
 grep -Fq 'sha256 cellar: :any_skip_relocation, x86_64_linux:' "$tmp_dir/rhoe-markdown.rb" || fail "Rendered RhoeMarkdown formula must include Linux x86-64 bottle checksum"
 grep -Fq 'bin.install_symlink bin/"rhoemd" => "markdown"' "$tmp_dir/rhoe-markdown.rb" || fail "Rendered RhoeMarkdown formula must install markdown alias"
+grep -Fq 'rhoemd-preview-menu' "$tmp_dir/rhoe-markdown.rb" || fail "Rendered RhoeMarkdown formula must install the macOS preview menu companion"
 
 if [[ "${RHOE_TAP_BREW_STYLE:-0}" == "1" ]] && command -v brew >/dev/null 2>&1; then
   HOMEBREW_NO_AUTO_UPDATE=1 brew style --formula "$tmp_dir/rhoe-liquid.rb" >/dev/null
