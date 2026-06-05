@@ -8,8 +8,8 @@ class RhoeMarkdown < Formula
 
   bottle do
     root_url "https://github.com/RhoePlatform/homebrew-rhoe/releases/download/rhoe-markdown-0.1.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "1044ff03389748ad12996037582afe632934acad4d4971f6484fcf482196278d"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "ee858b7ae5bb08b19b7d01fba8fc00dc244831f9337457af1c50bf03ac6d74b1"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "7596e6756773bcfdeb25e6a16fc70c4d5bd322110c631ab8c51b5dc65f81758e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "4811e2e18c20104299bc838865ebb3579d6e65f04e7d05f39973dbdcfc101637"
   end
 
   on_macos do
