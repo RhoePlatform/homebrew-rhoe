@@ -7,7 +7,7 @@ source archive checksum, and bottle checksums are available. Keeping the tap
 template-driven avoids publishing formulas with placeholder checksums or URLs
 that cannot yet be installed.
 
-| Formula | Executable | Template |
+| Formula | Executables | Template |
 | --- | --- | --- |
-| `rhoe-liquid` | `liquid` | `Formula/rhoe-liquid.rb.template` |
-| `rhoe-markdown` | `rhoemd` | `Formula/rhoe-markdown.rb.template` |
+| `rhoe-liquid` | `liquid`, `rhoelq` | `Formula/rhoe-liquid.rb.template` |
+| `rhoe-markdown` | `rhoemd`, `markdown` | `Formula/rhoe-markdown.rb.template` |

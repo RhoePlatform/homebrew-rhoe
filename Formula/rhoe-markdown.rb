@@ -135,13 +135,18 @@ class RhoeMarkdown < Formula
       system "patchelf", "--force-rpath", "--set-rpath", rhoemd_rpath, buildpath/".build/release/rhoemd"
     end
     bin.install buildpath/".build/release/rhoemd"
+    bin.install_symlink bin/"rhoemd" => "markdown"
   end
 
   test do
     assert_match "RhoeMarkdownKit #{version}", shell_output("#{bin}/rhoemd --version")
+    assert_match "RhoeMarkdownKit #{version}", shell_output("#{bin}/markdown --version")
 
     (testpath/"input.md").write("# Hello\n\nThis is **rhoemd**.")
     system bin/"rhoemd", "input.md", "--format", "html", "--output", "output.html"
     assert_match "<strong>rhoemd</strong>", (testpath/"output.html").read
+
+    system bin/"markdown", "input.md", "--format", "html", "--output", "alias.html"
+    assert_match "<strong>rhoemd</strong>", (testpath/"alias.html").read
   end
 end

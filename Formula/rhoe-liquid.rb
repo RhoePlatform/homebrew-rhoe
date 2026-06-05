@@ -135,6 +135,7 @@ class RhoeLiquid < Formula
       system "patchelf", "--force-rpath", "--set-rpath", liquid_rpath, buildpath/".build/release/liquid"
     end
     bin.install buildpath/".build/release/liquid"
+    bin.install_symlink bin/"liquid" => "rhoelq"
 
     manpage = buildpath/"Documentation/CLI/man/liquid.1"
     man1.install manpage if manpage.exist?
@@ -151,10 +152,14 @@ class RhoeLiquid < Formula
 
   test do
     assert_match version.to_s, shell_output("#{bin}/liquid --version")
+    assert_match version.to_s, shell_output("#{bin}/rhoelq --version")
 
     (testpath/"context.json").write('{"name":"rhoe"}')
     (testpath/"template.liquid").write("Hello {{ name | upcase }}")
     system bin/"liquid", "render", "template.liquid", "--context", "context.json", "--output", "out.txt"
     assert_equal "Hello RHOE", (testpath/"out.txt").read
+
+    system bin/"rhoelq", "render", "template.liquid", "--context", "context.json", "--output", "alias.txt"
+    assert_equal "Hello RHOE", (testpath/"alias.txt").read
   end
 end

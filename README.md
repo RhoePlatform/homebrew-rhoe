@@ -3,10 +3,10 @@
 Official Homebrew tap for RhoePlatform command-line tools.
 
 This repository is the distribution lane for installable Rhoe CLIs. It starts
-with `rhoe-liquid`, the Homebrew formula for the RhoeLiquid `liquid` executable,
-and `rhoe-markdown`, the Homebrew formula for the RhoeMarkdown `rhoemd`
-compiler. The same pattern will extend to RhoeJSON, RhoeCharts, and future
-foundation engines.
+with `rhoe-liquid`, the Homebrew formula for the RhoeLiquid `liquid` and
+`rhoelq` executables, and `rhoe-markdown`, the Homebrew formula for the
+RhoeMarkdown `rhoemd` and `markdown` compiler commands. The same pattern will
+extend to RhoeJSON, RhoeCharts, and future foundation engines.
 
 ## Status
 
@@ -22,6 +22,7 @@ After the first public release:
 brew tap RhoePlatform/rhoe
 brew install rhoe-liquid
 liquid --version
+rhoelq --version
 ```
 
 Install the Markdown compiler:
@@ -30,21 +31,22 @@ Install the Markdown compiler:
 brew tap RhoePlatform/rhoe
 brew install rhoe-markdown
 rhoemd --version
+markdown --version
 ```
 
 The formula names are intentionally product-oriented:
 
-| Formula | Executable |
+| Formula | Executables |
 | --- | --- |
-| `rhoe-liquid` | `liquid` |
-| `rhoe-markdown` | `rhoemd` |
+| `rhoe-liquid` | `liquid`, `rhoelq` |
+| `rhoe-markdown` | `rhoemd`, `markdown` |
 
 ## Formulae
 
-| Formula | Executable | Status | Source repo |
+| Formula | Executables | Status | Source repo |
 | --- | --- | --- | --- |
-| `rhoe-liquid` | `liquid` | `v0.1.x` release lane | `RhoePlatform/RhoeLiquid` |
-| `rhoe-markdown` | `rhoemd` | `v0.1.0` release lane | `RhoePlatform/RhoeMarkdown` |
+| `rhoe-liquid` | `liquid`, `rhoelq` | `v0.1.x` release lane | `RhoePlatform/RhoeLiquid` |
+| `rhoe-markdown` | `rhoemd`, `markdown` | `v0.1.0` release lane | `RhoePlatform/RhoeMarkdown` |
 
 ## Bottle Targets
 

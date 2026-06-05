@@ -32,11 +32,13 @@ brew untap RhoePlatform/rhoe || true
 brew tap RhoePlatform/rhoe
 brew install rhoe-liquid
 liquid --version
+rhoelq --version
 liquid render --help
 ```
 
 ## Notes
 
-The formula name is intentionally `rhoe-liquid` while the executable remains
-`liquid`. This prevents generic formula-name ambiguity while preserving the CLI
-name users type day to day.
+The formula name is intentionally `rhoe-liquid` while the installed commands are
+the friendly `liquid` executable and the compact RhoePlatform-qualified
+`rhoelq` alias. This prevents generic formula-name ambiguity while preserving
+the CLI names users type day to day.

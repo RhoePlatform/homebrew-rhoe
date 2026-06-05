@@ -1,7 +1,8 @@
 # RhoeMarkdown Bottle Release Runbook
 
 This tap publishes bottles for the `rhoe-markdown` formula after the source
-repository has a certified `vX.Y.Z` tag. The installed executable is `rhoemd`.
+repository has a certified `vX.Y.Z` tag. The installed executables are `rhoemd`
+and `markdown`.
 
 ## Preconditions
 
@@ -32,7 +33,8 @@ After the formula commit lands:
 brew tap RhoePlatform/rhoe
 brew install rhoe-markdown
 rhoemd --version
+markdown --version
 ```
 
-The formula name is intentionally `rhoe-markdown`, while the executable remains
-the compact compiler command `rhoemd`.
+The formula name is intentionally `rhoe-markdown`, while the installed commands
+provide the compact compiler command `rhoemd` and the friendly `markdown` alias.
