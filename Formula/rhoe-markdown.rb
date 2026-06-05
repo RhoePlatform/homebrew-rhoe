@@ -8,8 +8,8 @@ class RhoeMarkdown < Formula
 
   bottle do
     root_url "https://github.com/RhoePlatform/homebrew-rhoe/releases/download/rhoe-markdown-0.1.1"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "fa80e16f17d4ba6d069dcb500339bcc21f1a897ee4c1bc2f10eec48ee4017a42"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "4e818d56bc2ddcd854216db61d834a2656661288a831115f7375eb9bc2846c66"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "d49b41ab74dca1f96388f7c9f82b23adacd60b2838e02381ee565b1856425865"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "8c5139b31afff151b24919f5ef27e2381b85a838ce27d1e0f4c54c45911b7510"
   end
 
   on_macos do
@@ -114,6 +114,7 @@ class RhoeMarkdown < Formula
       vendor_linux_library_closure("libxml2.so.2", libexec/"swift/linux")
     else
       system swift, "build", "-c", "release", "--product", "rhoemd", "--disable-sandbox"
+      system swift, "build", "-c", "release", "--product", "rhoemd-preview-menu", "--disable-sandbox"
     end
 
     if OS.linux?
@@ -136,6 +137,7 @@ class RhoeMarkdown < Formula
     end
     bin.install buildpath/".build/release/rhoemd"
     bin.install_symlink bin/"rhoemd" => "markdown"
+    bin.install buildpath/".build/release/rhoemd-preview-menu" if OS.mac?
   end
 
   test do
@@ -148,5 +150,10 @@ class RhoeMarkdown < Formula
 
     system bin/"markdown", "input.md", "--format", "html", "--output", "alias.html"
     assert_match "<strong>rhoemd</strong>", (testpath/"alias.html").read
+
+    if OS.mac?
+      assert_path_exists bin/"rhoemd-preview-menu"
+      assert_match '"state"', shell_output("#{bin}/rhoemd-preview-menu --status-json")
+    end
   end
 end
