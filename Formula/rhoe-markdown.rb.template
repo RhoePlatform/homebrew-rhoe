@@ -146,7 +146,7 @@ __BOTTLE_BLOCK__
     assert_match "<strong>rhoemd</strong>", (testpath/"alias.html").read
 
     if OS.mac?
-      assert_predicate bin/"rhoemd-preview-menu", :exist?
+      assert_path_exists bin/"rhoemd-preview-menu"
       assert_match '"state"', shell_output("#{bin}/rhoemd-preview-menu --status-json")
     end
   end

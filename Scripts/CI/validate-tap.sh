@@ -63,6 +63,7 @@ grep -Fq 'sha256 cellar: :any_skip_relocation, arm64_tahoe:' "$tmp_dir/rhoe-mark
 grep -Fq 'sha256 cellar: :any_skip_relocation, x86_64_linux:' "$tmp_dir/rhoe-markdown.rb" || fail "Rendered RhoeMarkdown formula must include Linux x86-64 bottle checksum"
 grep -Fq 'bin.install_symlink bin/"rhoemd" => "markdown"' "$tmp_dir/rhoe-markdown.rb" || fail "Rendered RhoeMarkdown formula must install markdown alias"
 grep -Fq 'rhoemd-preview-menu' "$tmp_dir/rhoe-markdown.rb" || fail "Rendered RhoeMarkdown formula must install the macOS preview menu companion"
+grep -Fq 'assert_path_exists bin/"rhoemd-preview-menu"' "$tmp_dir/rhoe-markdown.rb" || fail "Rendered RhoeMarkdown formula must style-check the macOS preview menu companion"
 
 if [[ "${RHOE_TAP_BREW_STYLE:-0}" == "1" ]] && command -v brew >/dev/null 2>&1; then
   HOMEBREW_NO_AUTO_UPDATE=1 brew style --formula "$tmp_dir/rhoe-liquid.rb" >/dev/null
