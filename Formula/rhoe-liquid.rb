@@ -1,15 +1,15 @@
 class RhoeLiquid < Formula
   desc "RhoePlatform Liquid template engine CLI"
   homepage "https://github.com/RhoePlatform/RhoeLiquid"
-  url "https://github.com/RhoePlatform/RhoeLiquid/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "98be57fb259bf64582e4a91dbd173465d1528e00456ad37ac1ee59d810a2cf2f"
+  url "https://github.com/RhoePlatform/RhoeLiquid/archive/refs/tags/v0.1.1.tar.gz"
+  sha256 "570a98a81753b1c7a88546617f84bf1ea5915a9007697e1ba41a99ede67a5149"
   license "Apache-2.0"
   head "https://github.com/RhoePlatform/RhoeLiquid.git", branch: "main"
 
   bottle do
-    root_url "https://github.com/RhoePlatform/homebrew-rhoe/releases/download/rhoe-liquid-0.1.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "dd7def3c386b3dfad97e91718cdb3f114bb320611e56fab96415a576edbc6bce"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "21746b126f14dbb20fa9837687389704d52977b3f829829e63cf460b8fe86aea"
+    root_url "https://github.com/RhoePlatform/homebrew-rhoe/releases/download/rhoe-liquid-0.1.1"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "c2079983eeb32e527eac4a7ffe5c7af99d074687c75f8126b9fed599e9f6775f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "d8a6b2ffb70712fbd0db9d58e6883fbd7c0cd491d150512b3d516517eb761412"
   end
 
   on_macos do
