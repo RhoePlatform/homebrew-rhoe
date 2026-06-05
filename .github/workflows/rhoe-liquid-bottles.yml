@@ -201,6 +201,9 @@ jobs:
         with:
           path: bottle-artifacts
 
+      - name: Prepare Homebrew bottle download names
+        run: bash Scripts/CI/prepare-homebrew-bottle-assets.sh rhoe-liquid "${{ needs.prepare-formula.outputs.version }}" bottle-artifacts
+
       - name: Publish bottle assets
         if: needs.prepare-formula.outputs.publish_release == 'true'
         env:
@@ -218,17 +221,6 @@ jobs:
             echo "error: no bottle assets found" >&2
             exit 1
           fi
-          alias_dir="bottle-artifacts/homebrew-download-aliases"
-          mkdir -p "$alias_dir"
-          for asset in "${assets[@]}"; do
-            name="$(basename "$asset")"
-            alias_name="${name/rhoe-liquid--${{ needs.prepare-formula.outputs.version }}/rhoe-liquid-${{ needs.prepare-formula.outputs.version }}}"
-            if [[ "$alias_name" != "$name" ]]; then
-              cp "$asset" "$alias_dir/$alias_name"
-            fi
-          done
-          mapfile -t alias_assets < <(find "$alias_dir" -type f \( -name '*.tar.gz' -o -name '*.json' \) | sort)
-          assets+=("${alias_assets[@]}")
           gh release upload "$tag" "${assets[@]}" --clobber
 
       - name: Extract bottle checksums
@@ -263,5 +255,14 @@ jobs:
             echo "Formula already up to date."
           else
             git commit -m "rhoe-liquid ${{ needs.prepare-formula.outputs.version }}"
-            git push
+            for attempt in 1 2 3; do
+              if git push; then
+                exit 0
+              fi
+              echo "Push failed; rebasing onto origin/main and retrying (attempt $attempt)." >&2
+              git fetch origin main
+              git rebase origin/main
+            done
+            echo "error: unable to push final formula after retries" >&2
+            exit 1
           fi

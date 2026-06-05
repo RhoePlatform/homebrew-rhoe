@@ -14,6 +14,7 @@ fail() {
 [[ -f LICENSE ]] || fail "Missing LICENSE"
 [[ -f Formula/rhoe-liquid.rb.template ]] || fail "Missing RhoeLiquid formula template"
 [[ -f Formula/rhoe-markdown.rb.template ]] || fail "Missing RhoeMarkdown formula template"
+[[ -x Scripts/CI/prepare-homebrew-bottle-assets.sh ]] || fail "Bottle asset preparation helper is not executable"
 [[ -x Scripts/CI/render-rhoe-liquid-formula.sh ]] || fail "Formula renderer is not executable"
 [[ -x Scripts/CI/render-rhoe-markdown-formula.sh ]] || fail "RhoeMarkdown formula renderer is not executable"
 
