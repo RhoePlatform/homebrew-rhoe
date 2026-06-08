@@ -14,21 +14,33 @@ fail() {
 [[ -f LICENSE ]] || fail "Missing LICENSE"
 [[ -f Formula/rhoe-liquid.rb.template ]] || fail "Missing RhoeLiquid formula template"
 [[ -f Formula/rhoe-markdown.rb.template ]] || fail "Missing RhoeMarkdown formula template"
+[[ -f Formula/rhoe-json.rb.template ]] || fail "Missing RhoeJSON formula template"
 [[ -x Scripts/CI/prepare-homebrew-bottle-assets.sh ]] || fail "Bottle asset preparation helper is not executable"
 [[ -x Scripts/CI/render-rhoe-liquid-formula.sh ]] || fail "Formula renderer is not executable"
 [[ -x Scripts/CI/render-rhoe-markdown-formula.sh ]] || fail "RhoeMarkdown formula renderer is not executable"
+[[ -x Scripts/CI/render-rhoe-json-formula.sh ]] || fail "RhoeJSON formula renderer is not executable"
+[[ -x Scripts/CI/extract-rhoe-json-bottle-checksums.sh ]] || fail "RhoeJSON checksum extractor is not executable"
 
 grep -Fq "brew tap RhoePlatform/rhoe" README.md || fail "README must document the canonical tap command"
 grep -Fq "brew install rhoe-liquid" README.md || fail "README must document the canonical install command"
 grep -Fq "brew install rhoe-markdown" README.md || fail "README must document the RhoeMarkdown install command"
+grep -Fq "brew install rhoe-json" README.md || fail "README must document the RhoeJSON install command"
 grep -Fq "rhoelq --version" README.md || fail "README must document the RhoeLiquid alias command"
 grep -Fq "markdown --version" README.md || fail "README must document the RhoeMarkdown alias command"
+grep -Fq "rhoejn --version" README.md || fail "README must document the RhoeJSON compact alias command"
+grep -Fq "json --version" README.md || fail "README must document the RhoeJSON friendly alias command"
 grep -Fq "class RhoeLiquid < Formula" Formula/rhoe-liquid.rb.template || fail "Formula template must define class RhoeLiquid"
 grep -Fq "class RhoeMarkdown < Formula" Formula/rhoe-markdown.rb.template || fail "Formula template must define class RhoeMarkdown"
+grep -Fq "class RhoeJson < Formula" Formula/rhoe-json.rb.template || fail "Formula template must define class RhoeJson"
 grep -Fq 'bin.install_symlink bin/"liquid" => "rhoelq"' Formula/rhoe-liquid.rb.template || fail "RhoeLiquid formula template must install rhoelq alias"
+grep -Fq 'liquid-preview-menu' Formula/rhoe-liquid.rb.template || fail "RhoeLiquid formula template must install the macOS preview menu companion"
 grep -Fq "rhoemd" Formula/rhoe-markdown.rb.template || fail "RhoeMarkdown formula template must install rhoemd"
 grep -Fq 'bin.install_symlink bin/"rhoemd" => "markdown"' Formula/rhoe-markdown.rb.template || fail "RhoeMarkdown formula template must install markdown alias"
 grep -Fq 'rhoemd-preview-menu' Formula/rhoe-markdown.rb.template || fail "RhoeMarkdown formula template must install the macOS preview menu companion"
+grep -Fq "rhoejson" Formula/rhoe-json.rb.template || fail "RhoeJSON formula template must install rhoejson"
+grep -Fq 'bin.install_symlink bin/"rhoejson" => "rhoejn"' Formula/rhoe-json.rb.template || fail "RhoeJSON formula template must install rhoejn alias"
+grep -Fq 'bin.install_symlink bin/"rhoejson" => "json"' Formula/rhoe-json.rb.template || fail "RhoeJSON formula template must install json alias"
+grep -Fq 'rhoejson-preview-menu' Formula/rhoe-json.rb.template || fail "RhoeJSON formula template must install the macOS preview menu companion"
 grep -Fq "arm64_tahoe" README.md || fail "README must document the macOS 26 Apple Silicon bottle target"
 grep -Fq "x86_64_linux" README.md || fail "README must document the Linux x86-64 bottle target"
 
@@ -50,6 +62,7 @@ grep -Fq 'root_url "https://github.com/RhoePlatform/homebrew-rhoe/releases/downl
 grep -Fq 'sha256 cellar: :any_skip_relocation, arm64_tahoe:' "$tmp_dir/rhoe-liquid.rb" || fail "Rendered formula must include macOS 26 Apple Silicon bottle checksum"
 grep -Fq 'sha256 cellar: :any_skip_relocation, x86_64_linux:' "$tmp_dir/rhoe-liquid.rb" || fail "Rendered formula must include Linux x86-64 bottle checksum"
 grep -Fq 'bin.install_symlink bin/"liquid" => "rhoelq"' "$tmp_dir/rhoe-liquid.rb" || fail "Rendered formula must install rhoelq alias"
+grep -Fq 'liquid-preview-menu' "$tmp_dir/rhoe-liquid.rb" || fail "Rendered formula must install the macOS preview menu companion"
 
 RHOE_MARKDOWN_VERSION=0.1.0 \
 RHOE_MARKDOWN_SOURCE_SHA256=dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd \
@@ -65,9 +78,25 @@ grep -Fq 'bin.install_symlink bin/"rhoemd" => "markdown"' "$tmp_dir/rhoe-markdow
 grep -Fq 'rhoemd-preview-menu' "$tmp_dir/rhoe-markdown.rb" || fail "Rendered RhoeMarkdown formula must install the macOS preview menu companion"
 grep -Fq 'assert_path_exists bin/"rhoemd-preview-menu"' "$tmp_dir/rhoe-markdown.rb" || fail "Rendered RhoeMarkdown formula must style-check the macOS preview menu companion"
 
+RHOE_JSON_VERSION=0.1.0 \
+RHOE_JSON_SOURCE_SHA256=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \
+RHOE_JSON_BOTTLE_SHA256_ARM64_TAHOE=1111111111111111111111111111111111111111111111111111111111111111 \
+RHOE_JSON_BOTTLE_SHA256_X86_64_LINUX=2222222222222222222222222222222222222222222222222222222222222222 \
+  bash Scripts/CI/render-rhoe-json-formula.sh "$tmp_dir/rhoe-json.rb" >/dev/null
+
+ruby -c "$tmp_dir/rhoe-json.rb" >/dev/null
+grep -Fq 'root_url "https://github.com/RhoePlatform/homebrew-rhoe/releases/download/rhoe-json-0.1.0"' "$tmp_dir/rhoe-json.rb" || fail "Rendered RhoeJSON formula must use the tap release bottle root"
+grep -Fq 'sha256 cellar: :any_skip_relocation, arm64_tahoe:' "$tmp_dir/rhoe-json.rb" || fail "Rendered RhoeJSON formula must include macOS 26 Apple Silicon bottle checksum"
+grep -Fq 'sha256 cellar: :any_skip_relocation, x86_64_linux:' "$tmp_dir/rhoe-json.rb" || fail "Rendered RhoeJSON formula must include Linux x86-64 bottle checksum"
+grep -Fq 'bin.install_symlink bin/"rhoejson" => "rhoejn"' "$tmp_dir/rhoe-json.rb" || fail "Rendered RhoeJSON formula must install rhoejn alias"
+grep -Fq 'bin.install_symlink bin/"rhoejson" => "json"' "$tmp_dir/rhoe-json.rb" || fail "Rendered RhoeJSON formula must install json alias"
+grep -Fq 'rhoejson-preview-menu' "$tmp_dir/rhoe-json.rb" || fail "Rendered RhoeJSON formula must install the macOS preview menu companion"
+grep -Fq 'assert_path_exists bin/"rhoejson-preview-menu"' "$tmp_dir/rhoe-json.rb" || fail "Rendered RhoeJSON formula must style-check the macOS preview menu companion"
+
 if [[ "${RHOE_TAP_BREW_STYLE:-0}" == "1" ]] && command -v brew >/dev/null 2>&1; then
   HOMEBREW_NO_AUTO_UPDATE=1 brew style --formula "$tmp_dir/rhoe-liquid.rb" >/dev/null
   HOMEBREW_NO_AUTO_UPDATE=1 brew style --formula "$tmp_dir/rhoe-markdown.rb" >/dev/null
+  HOMEBREW_NO_AUTO_UPDATE=1 brew style --formula "$tmp_dir/rhoe-json.rb" >/dev/null
 fi
 
 echo "Homebrew tap validation passed."

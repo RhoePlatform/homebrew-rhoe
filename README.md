@@ -4,9 +4,10 @@ Official Homebrew tap for RhoePlatform command-line tools.
 
 This repository is the distribution lane for installable Rhoe CLIs. It starts
 with `rhoe-liquid`, the Homebrew formula for the RhoeLiquid `liquid` and
-`rhoelq` executables, and `rhoe-markdown`, the Homebrew formula for the
-RhoeMarkdown `rhoemd` and `markdown` compiler commands. The same pattern will
-extend to RhoeJSON, RhoeCharts, and future foundation engines.
+`rhoelq` executables; `rhoe-markdown`, the Homebrew formula for the RhoeMarkdown
+`rhoemd` and `markdown` compiler commands; and `rhoe-json`, the Homebrew formula
+for the RhoeJSON `rhoejson`, `rhoejn`, and `json` commands. The same pattern
+will extend to RhoeCharts and future foundation engines.
 
 ## Status
 
@@ -34,12 +35,23 @@ rhoemd --version
 markdown --version
 ```
 
+Install the JSON engine:
+
+```bash
+brew tap RhoePlatform/rhoe
+brew install rhoe-json
+rhoejson --version
+rhoejn --version
+json --version
+```
+
 The formula names are intentionally product-oriented:
 
 | Formula | Executables |
 | --- | --- |
 | `rhoe-liquid` | `liquid`, `rhoelq` |
 | `rhoe-markdown` | `rhoemd`, `markdown` |
+| `rhoe-json` | `rhoejson`, `rhoejn`, `json` |
 
 ## Formulae
 
@@ -47,6 +59,7 @@ The formula names are intentionally product-oriented:
 | --- | --- | --- | --- |
 | `rhoe-liquid` | `liquid`, `rhoelq` | `v0.1.x` release lane | `RhoePlatform/RhoeLiquid` |
 | `rhoe-markdown` | `rhoemd`, `markdown` | `v0.1.0` release lane | `RhoePlatform/RhoeMarkdown` |
+| `rhoe-json` | `rhoejson`, `rhoejn`, `json` | `v0.1.0` release lane | `RhoePlatform/RhoeJSON` |
 
 ## Bottle Targets
 
@@ -89,13 +102,23 @@ RHOE_MARKDOWN_BOTTLE_SHA256_X86_64_LINUX=<linux-x86_64-bottle-sha256> \
 make render-rhoe-markdown-formula
 ```
 
+Render the RhoeJSON formula:
+
+```bash
+RHOE_JSON_VERSION=0.1.0 \
+RHOE_JSON_SOURCE_SHA256=<source-archive-sha256> \
+RHOE_JSON_BOTTLE_SHA256_ARM64_TAHOE=<macos-26-arm64-bottle-sha256> \
+RHOE_JSON_BOTTLE_SHA256_X86_64_LINUX=<linux-x86_64-bottle-sha256> \
+make render-rhoe-json-formula
+```
+
 Rendered formulas are written to `Formula/<formula>.rb`.
 
-For the integrated release lanes, dispatch the `RhoeLiquid Bottles` or
-`RhoeMarkdown Bottles` workflow with the source tag version and source archive
-checksum. The workflow renders the source formula, builds bottles for
-`arm64_tahoe` and `x86_64_linux`, publishes bottle assets when requested,
-computes bottle checksums, and commits the final formula when
+For the integrated release lanes, dispatch the `RhoeLiquid Bottles`,
+`RhoeMarkdown Bottles`, or `RhoeJSON Bottles` workflow with the source tag
+version and source archive checksum. The workflow renders the source formula,
+builds bottles for `arm64_tahoe` and `x86_64_linux`, publishes bottle assets
+when requested, computes bottle checksums, and commits the final formula when
 `commit_formula=true`.
 
 ## Release Model

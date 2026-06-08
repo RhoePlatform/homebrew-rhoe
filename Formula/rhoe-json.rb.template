@@ -1,10 +1,10 @@
-class RhoeLiquid < Formula
-  desc "RhoePlatform Liquid template engine CLI"
-  homepage "https://github.com/RhoePlatform/RhoeLiquid"
-  url "https://github.com/RhoePlatform/RhoeLiquid/archive/refs/tags/v__VERSION__.tar.gz"
+class RhoeJson < Formula
+  desc "Swift-native JSON CLI, jq-inspired filters, preview daemon, and WASM facade"
+  homepage "https://github.com/RhoePlatform/RhoeJSON"
+  url "https://github.com/RhoePlatform/RhoeJSON/archive/refs/tags/v__VERSION__.tar.gz"
   sha256 "__SOURCE_SHA256__"
   license "Apache-2.0"
-  head "https://github.com/RhoePlatform/RhoeLiquid.git", branch: "main"
+  head "https://github.com/RhoePlatform/RhoeJSON.git", branch: "main"
 __BOTTLE_BLOCK__
   on_macos do
     depends_on xcode: ["26.0", :build]
@@ -73,7 +73,7 @@ __BOTTLE_BLOCK__
   end
 
   def install
-    swift = ENV["HOMEBREW_RHOE_LIQUID_SWIFT"]
+    swift = ENV["HOMEBREW_RHOE_JSON_SWIFT"]
     swift = "swift" if swift.blank?
 
     if OS.linux?
@@ -82,7 +82,7 @@ __BOTTLE_BLOCK__
         swift = Pathname.pwd/"usr/bin/swift"
         swift_runtime = Pathname.pwd/"usr/lib/swift/linux"
         cd buildpath do
-          system swift, "build", "-c", "release", "--product", "liquid", "--disable-sandbox"
+          system swift, "build", "-c", "release", "--product", "rhoejson", "--disable-sandbox"
         end
         %w[
           libBlocksRuntime.so
@@ -107,8 +107,8 @@ __BOTTLE_BLOCK__
       end
       vendor_linux_library_closure("libxml2.so.2", libexec/"swift/linux")
     else
-      system swift, "build", "-c", "release", "--product", "liquid", "--disable-sandbox"
-      system swift, "build", "-c", "release", "--product", "liquid-preview-menu", "--disable-sandbox"
+      system swift, "build", "-c", "release", "--product", "rhoejson", "--disable-sandbox"
+      system swift, "build", "-c", "release", "--product", "rhoejson-preview-menu", "--disable-sandbox"
     end
 
     if OS.linux?
@@ -117,7 +117,7 @@ __BOTTLE_BLOCK__
         Formula["curl"].opt_lib,
         Formula["zlib-ng-compat"].opt_lib,
       ].join(":")
-      liquid_rpath = [
+      rhoejson_rpath = [
         "$ORIGIN/../libexec/swift/linux",
         Formula["curl"].opt_lib,
         Formula["zlib-ng-compat"].opt_lib,
@@ -127,40 +127,40 @@ __BOTTLE_BLOCK__
 
         system "patchelf", "--force-rpath", "--set-rpath", swift_runtime_rpath, library
       end
-      system "patchelf", "--force-rpath", "--set-rpath", liquid_rpath, buildpath/".build/release/liquid"
+      system "patchelf", "--force-rpath", "--set-rpath", rhoejson_rpath, buildpath/".build/release/rhoejson"
     end
-    bin.install buildpath/".build/release/liquid"
-    bin.install_symlink bin/"liquid" => "rhoelq"
-    bin.install buildpath/".build/release/liquid-preview-menu" if OS.mac?
 
-    manpage = buildpath/"Documentation/CLI/man/liquid.1"
+    bin.install buildpath/".build/release/rhoejson"
+    bin.install_symlink bin/"rhoejson" => "rhoejn"
+    bin.install_symlink bin/"rhoejson" => "json"
+    bin.install buildpath/".build/release/rhoejson-preview-menu" if OS.mac?
+
+    manpage = buildpath/"Documentation/CLI/man/rhoejson.1"
     man1.install manpage if manpage.exist?
 
-    bash_completion_path = buildpath/"Documentation/CLI/completions/liquid.bash"
-    bash_completion.install bash_completion_path => "liquid" if bash_completion_path.exist?
+    bash_completion_path = buildpath/"Documentation/CLI/completions/rhoejson.bash"
+    bash_completion.install bash_completion_path => "rhoejson" if bash_completion_path.exist?
 
-    zsh_completion_path = buildpath/"Documentation/CLI/completions/_liquid"
-    zsh_completion.install zsh_completion_path => "_liquid" if zsh_completion_path.exist?
+    zsh_completion_path = buildpath/"Documentation/CLI/completions/_rhoejson"
+    zsh_completion.install zsh_completion_path => "_rhoejson" if zsh_completion_path.exist?
 
-    fish_completion_path = buildpath/"Documentation/CLI/completions/liquid.fish"
+    fish_completion_path = buildpath/"Documentation/CLI/completions/rhoejson.fish"
     fish_completion.install fish_completion_path if fish_completion_path.exist?
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/liquid --version")
-    assert_match version.to_s, shell_output("#{bin}/rhoelq --version")
+    assert_match version.to_s, shell_output("#{bin}/rhoejson --version")
+    assert_match version.to_s, shell_output("#{bin}/rhoejn --version")
+    assert_match version.to_s, shell_output("#{bin}/json --version")
 
-    (testpath/"context.json").write('{"name":"rhoe"}')
-    (testpath/"template.liquid").write("Hello {{ name | upcase }}")
-    system bin/"liquid", "render", "template.liquid", "--context", "context.json", "--output", "out.txt"
-    assert_equal "Hello RHOE", (testpath/"out.txt").read
-
-    system bin/"rhoelq", "render", "template.liquid", "--context", "context.json", "--output", "alias.txt"
-    assert_equal "Hello RHOE", (testpath/"alias.txt").read
+    (testpath/"input.json").write('{"records":[{"name":"Ada","active":true},{"name":"Grace","active":false}]}')
+    assert_equal "Ada\n", shell_output("#{bin}/rhoejson jq '.records[] | select(.active) | .name' input.json --raw")
+    assert_equal "Ada\n", shell_output("#{bin}/rhoejn jq '.records[] | select(.active) | .name' input.json --raw")
+    assert_equal "Ada\n", shell_output("#{bin}/json jq '.records[] | select(.active) | .name' input.json --raw")
 
     if OS.mac?
-      assert_path_exists bin/"liquid-preview-menu"
-      assert_match '"state"', shell_output("#{bin}/liquid-preview-menu --status-json")
+      assert_path_exists bin/"rhoejson-preview-menu"
+      assert_match '"state"', shell_output("#{bin}/rhoejson-preview-menu --status-json")
     end
   end
 end

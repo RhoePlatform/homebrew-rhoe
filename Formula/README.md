@@ -11,3 +11,4 @@ that cannot yet be installed.
 | --- | --- | --- |
 | `rhoe-liquid` | `liquid`, `rhoelq` | `Formula/rhoe-liquid.rb.template` |
 | `rhoe-markdown` | `rhoemd`, `markdown` | `Formula/rhoe-markdown.rb.template` |
+| `rhoe-json` | `rhoejson`, `rhoejn`, `json` | `Formula/rhoe-json.rb.template` |
