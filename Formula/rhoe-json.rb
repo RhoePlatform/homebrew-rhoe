@@ -1,0 +1,172 @@
+class RhoeJson < Formula
+  desc "Swift-native JSON CLI, jq-inspired filters, preview daemon, and WASM facade"
+  homepage "https://github.com/RhoePlatform/RhoeJSON"
+  url "https://github.com/RhoePlatform/RhoeJSON/archive/refs/tags/v0.1.0.tar.gz"
+  sha256 "72d335fa874343e696d47c4c788e4002cd3be4701e732677cc3732a9bd6911aa"
+  license "Apache-2.0"
+  head "https://github.com/RhoePlatform/RhoeJSON.git", branch: "main"
+
+  bottle do
+    root_url "https://github.com/RhoePlatform/homebrew-rhoe/releases/download/rhoe-json-0.1.0"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "3004eb3cbc9a05ca01b515b72d0b136aa6e8119943f3907551b4ecbf23b04b80"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "cbc64ec61f72aaf9c77663c5effb6d2944ce6b2ee964ca4db9414bf0f7ec8963"
+  end
+
+  on_macos do
+    depends_on xcode: ["26.0", :build]
+  end
+
+  on_linux do
+    depends_on "patchelf" => :build
+    depends_on "swift" => :build
+    depends_on "curl"
+    depends_on "zlib-ng-compat"
+  end
+
+  resource "swift-6.3.2-ubuntu24.04" do
+    url "https://download.swift.org/swift-6.3.2-release/ubuntu2404/swift-6.3.2-RELEASE/swift-6.3.2-RELEASE-ubuntu24.04.tar.gz"
+    sha256 "827b2e935b52425068729d277148f286b37886231299d71f9136bcffd7084339"
+  end
+
+  def system_library_path(library_name)
+    Utils.safe_popen_read("ldconfig", "-p").each_line do |line|
+      next unless line.include?("#{library_name} ")
+
+      match = line.match(/=>\s+(\S+)/)
+      return Pathname.new(match[1]) if match
+    end
+
+    nil
+  end
+
+  def vendor_linux_library_closure(root_library, destination)
+    allowed_system_libraries = [
+      /\Ald-linux/,
+      /\Alibc\.so/,
+      /\Alibdl\.so/,
+      /\Alibgcc_s\.so/,
+      /\Alibm\.so/,
+      /\Alibpthread\.so/,
+      /\Alibresolv\.so/,
+      /\Alibrt\.so/,
+      /\Alibstdc\+\+\.so/,
+      /\Alibutil\.so/,
+    ]
+    pending_libraries = [root_library]
+    vendored_libraries = {}
+
+    until pending_libraries.empty?
+      library_name = pending_libraries.shift
+      next if vendored_libraries[library_name]
+
+      source = system_library_path(library_name)
+      odie "Unable to locate #{library_name} for the Linux bottle runtime" if source.nil?
+
+      cp source.realpath, destination/library_name
+      vendored_libraries[library_name] = true
+
+      Utils.safe_popen_read("ldd", source).each_line do |line|
+        match = line.match(/=>\s+(\S+)/)
+        next if match.nil?
+
+        dependency = File.basename(match[1])
+        next if allowed_system_libraries.any? { |pattern| dependency.match?(pattern) }
+        next if vendored_libraries[dependency]
+
+        pending_libraries << dependency
+      end
+    end
+  end
+
+  def install
+    swift = ENV["HOMEBREW_RHOE_JSON_SWIFT"]
+    swift = "swift" if swift.blank?
+
+    if OS.linux?
+      ENV.clang
+      resource("swift-6.3.2-ubuntu24.04").stage do
+        swift = Pathname.pwd/"usr/bin/swift"
+        swift_runtime = Pathname.pwd/"usr/lib/swift/linux"
+        cd buildpath do
+          system swift, "build", "-c", "release", "--product", "rhoejson", "--disable-sandbox"
+        end
+        %w[
+          libBlocksRuntime.so
+          libFoundation.so
+          libFoundationEssentials.so
+          libFoundationInternationalization.so
+          libFoundationNetworking.so
+          libFoundationXML.so
+          lib_FoundationICU.so
+          libdispatch.so
+          libswift_Builtin_float.so
+          libswift_Concurrency.so
+          libswift_RegexParser.so
+          libswift_StringProcessing.so
+          libswiftCore.so
+          libswiftDispatch.so
+          libswiftGlibc.so
+          libswiftSynchronization.so
+        ].each do |library|
+          (libexec/"swift/linux").install swift_runtime/library
+        end
+      end
+      vendor_linux_library_closure("libxml2.so.2", libexec/"swift/linux")
+    else
+      system swift, "build", "-c", "release", "--product", "rhoejson", "--disable-sandbox"
+      system swift, "build", "-c", "release", "--product", "rhoejson-preview-menu", "--disable-sandbox"
+    end
+
+    if OS.linux?
+      swift_runtime_rpath = [
+        "$ORIGIN",
+        Formula["curl"].opt_lib,
+        Formula["zlib-ng-compat"].opt_lib,
+      ].join(":")
+      rhoejson_rpath = [
+        "$ORIGIN/../libexec/swift/linux",
+        Formula["curl"].opt_lib,
+        Formula["zlib-ng-compat"].opt_lib,
+      ].join(":")
+      (libexec/"swift/linux").children.each do |library|
+        next unless library.basename.to_s.include?(".so")
+
+        system "patchelf", "--force-rpath", "--set-rpath", swift_runtime_rpath, library
+      end
+      system "patchelf", "--force-rpath", "--set-rpath", rhoejson_rpath, buildpath/".build/release/rhoejson"
+    end
+
+    bin.install buildpath/".build/release/rhoejson"
+    bin.install_symlink bin/"rhoejson" => "rhoejn"
+    bin.install_symlink bin/"rhoejson" => "json"
+    bin.install buildpath/".build/release/rhoejson-preview-menu" if OS.mac?
+
+    manpage = buildpath/"Documentation/CLI/man/rhoejson.1"
+    man1.install manpage if manpage.exist?
+
+    bash_completion_path = buildpath/"Documentation/CLI/completions/rhoejson.bash"
+    bash_completion.install bash_completion_path => "rhoejson" if bash_completion_path.exist?
+
+    zsh_completion_path = buildpath/"Documentation/CLI/completions/_rhoejson"
+    zsh_completion.install zsh_completion_path => "_rhoejson" if zsh_completion_path.exist?
+
+    fish_completion_path = buildpath/"Documentation/CLI/completions/rhoejson.fish"
+    fish_completion.install fish_completion_path if fish_completion_path.exist?
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/rhoejson --version")
+    assert_match version.to_s, shell_output("#{bin}/rhoejn --version")
+    assert_match version.to_s, shell_output("#{bin}/json --version")
+
+    (testpath/"input.json").write('{"records":[{"name":"Ada","active":true},{"name":"Grace","active":false}]}')
+    assert_equal "Ada\n", shell_output("#{bin}/rhoejson jq '.records[] | select(.active) | .name' input.json --raw")
+    assert_equal "Ada\n", shell_output("#{bin}/rhoejn jq '.records[] | select(.active) | .name' input.json --raw")
+    assert_equal "Ada\n", shell_output("#{bin}/json jq '.records[] | select(.active) | .name' input.json --raw")
+
+    if OS.mac?
+      assert_path_exists bin/"rhoejson-preview-menu"
+      assert_match '"state"', shell_output("#{bin}/rhoejson-preview-menu --status-json")
+    end
+  end
+end
